@@ -16,10 +16,11 @@
  *
  */
 
-'use strict';
+import * as _ from 'lodash';
+import * as constants from './constants';
+import { Metadata } from './metadata';
 
-var _ = require('lodash');
-var constants = require('./constants');
+export type GRPC_TYPE_TODO = any;
 
 /**
  * Wrap a function to pass null-like values through without calling it. If no
@@ -28,11 +29,11 @@ var constants = require('./constants');
  * @param {?function} func The function to wrap
  * @return {function} The wrapped function
  */
-exports.wrapIgnoreNull = function wrapIgnoreNull(func) {
+export function wrapIgnoreNull(func: Function) {
   if (!func) {
     return _.identity;
   }
-  return function(arg) {
+  return function(arg: any) {
     if (arg === null || arg === undefined) {
       return null;
     }
@@ -44,21 +45,21 @@ exports.wrapIgnoreNull = function wrapIgnoreNull(func) {
  * The logger object for the gRPC module. Defaults to console.
  * @private
  */
-exports.logger = console;
+export const logger = console;
 
 /**
  * The current logging verbosity. 0 corresponds to logging everything
  * @private
  */
-exports.logVerbosity = 0;
+export const logVerbosity = 0;
 
 /**
  * Log a message if the severity is at least as high as the current verbosity
  * @private
- * @param {Number} severity A value of the grpc.logVerbosity map
- * @param {String} message The message to log
+ * @param severity A value of the grpc.logVerbosity map
+ * @param message The message to log
  */
-exports.log = function log(severity, message) {
+export function log(severity: number, message: string) {
   if (severity >= exports.logVerbosity) {
     exports.logger.error(message);
   }
@@ -68,7 +69,7 @@ exports.log = function log(severity, message) {
  * Default options for loading proto files into gRPC
  * @alias grpc~defaultLoadOptions
  */
-exports.defaultGrpcOptions = {
+export const defaultGrpcOptions = {
   convertFieldsToCamelCase: false,
   binaryAsBase64: false,
   longsAsStrings: true,
@@ -76,15 +77,39 @@ exports.defaultGrpcOptions = {
   deprecatedArgumentOrder: false
 };
 
+export interface StatusObject {
+  /**
+   * The error code, a key of `grpc.status`
+   */
+  code: constants.status;
+  /**
+   * Human-readable description of the status
+   */
+  details: string;
+  /**
+   * Trailing metadata sent with the status, if applicable
+   */
+  metadata: Metadata;
+}
+
+export class ServiceError extends Error {
+  code?: number;
+  metadata?: any;
+  details?: any;
+  constructor(...args: any[]) {
+      super(...args)
+  }
+}
+
 /**
  * Create an Error object from a status object
  * @param {grpc~StatusObject} status The status object
  * @return {Error} The resulting Error
  */
-exports.createStatusError = function(status) {
-  let statusName = _.invert(constants.status)[status.code];
-  let message = `${status.code} ${statusName}: ${status.details}`;
-  let error = new Error(message);
+export function createStatusError(status: GRPC_TYPE_TODO) {
+  const statusName = _.invert(constants.status)[status.code];
+  const message = `${status.code} ${statusName}: ${status.details}`;
+  const error = new ServiceError(message);
   error.code = status.code;
   error.metadata = status.metadata;
   error.details = status.details;
@@ -96,7 +121,7 @@ exports.createStatusError = function(status) {
  * @param {grpc~MethodDefinition} method_definition
  * @return {number}
  */
-exports.getMethodType = function(method_definition) {
+export function getMethodType (method_definition: GRPC_TYPE_TODO) {
   if (method_definition.requestStream) {
     if (method_definition.responseStream) {
       return constants.methodTypes.BIDI_STREAMING;

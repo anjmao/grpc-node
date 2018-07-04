@@ -139,15 +139,14 @@
  * @module
  */
 
-'use strict';
 
-var _ = require('lodash');
-var grpc = require('./grpc_extension');
-var Metadata = require('./metadata');
-var constants = require('./constants');
-var common = require('./common');
-var methodTypes = constants.methodTypes;
-var EventEmitter = require('events').EventEmitter;
+import * as _ from 'lodash';
+import grpc from './grpc_extension';
+import Metadata from './metadata';
+import constants from './constants';
+import common from './common';
+const methodTypes = constants.methodTypes;
+import {EventEmitter} from 'events';
 
 /**
  * A custom error thrown when interceptor configuration fails.
@@ -155,7 +154,7 @@ var EventEmitter = require('events').EventEmitter;
  * @param {object=} extra
  * @constructor
  */
-var InterceptorConfigurationError =
+export const InterceptorConfigurationError =
   function InterceptorConfigurationError(message, extra) {
     Error.captureStackTrace(this, this.constructor);
     this.name = this.constructor.name;
@@ -169,182 +168,187 @@ require('util').inherits(InterceptorConfigurationError, Error);
  * A builder for gRPC status objects.
  * @constructor
  */
-function StatusBuilder() {
-  this.code = null;
-  this.details = null;
-  this.metadata = null;
+export class StatusBuilder {
+  constructor() {
+    this.code = null;
+    this.details = null;
+    this.metadata = null;
+  }
+
+  /**
+   * Adds a status code to the builder.
+   * @param {number} code The status code.
+   * @return {StatusBuilder}
+   */
+  withCode(code) {
+    this.code = code;
+    return this;
+  }
+
+  /**
+   * Adds details to the builder.
+   * @param {string} details A status message.
+   * @return {StatusBuilder}
+   */
+  withDetails(details) {
+    this.details = details;
+    return this;
+  }
+
+  /**
+   * Adds metadata to the builder.
+   * @param {Metadata} metadata The gRPC status metadata.
+   * @return {StatusBuilder}
+   */
+  withMetadata(metadata) {
+    this.metadata = metadata;
+    return this;
+  }
+
+  /**
+   * Builds the status object.
+   * @return {grpc~StatusObject} A gRPC status.
+   */
+  build() {
+    const status = {};
+    if (this.code !== undefined) {
+      status.code = this.code;
+    }
+    if (this.details) {
+      status.details = this.details;
+    }
+    if (this.metadata) {
+      status.metadata = this.metadata;
+    }
+    return status;
+  }
 }
-
-/**
- * Adds a status code to the builder.
- * @param {number} code The status code.
- * @return {StatusBuilder}
- */
-StatusBuilder.prototype.withCode = function(code) {
-  this.code = code;
-  return this;
-};
-
-/**
- * Adds details to the builder.
- * @param {string} details A status message.
- * @return {StatusBuilder}
- */
-StatusBuilder.prototype.withDetails = function(details) {
-  this.details = details;
-  return this;
-};
-
-/**
- * Adds metadata to the builder.
- * @param {Metadata} metadata The gRPC status metadata.
- * @return {StatusBuilder}
- */
-StatusBuilder.prototype.withMetadata = function(metadata) {
-  this.metadata = metadata;
-  return this;
-};
-
-/**
- * Builds the status object.
- * @return {grpc~StatusObject} A gRPC status.
- */
-StatusBuilder.prototype.build = function() {
-  var status = {};
-  if (this.code !== undefined) {
-    status.code = this.code;
-  }
-  if (this.details) {
-    status.details = this.details;
-  }
-  if (this.metadata) {
-    status.metadata = this.metadata;
-  }
-  return status;
-};
 
 /**
  * A builder for listener interceptors.
  * @constructor
  */
-function ListenerBuilder() {
-  this.metadata = null;
-  this.message = null;
-  this.status = null;
-}
+export class ListenerBuilder {
+  constructor() {
+    this.metadata = null;
+    this.message = null;
+    this.status = null;
+  }
 
-/**
- * Adds an onReceiveMetadata method to the builder.
- * @param {MetadataListener} on_receive_metadata A listener method for
- * receiving metadata.
- * @return {ListenerBuilder}
- */
-ListenerBuilder.prototype.withOnReceiveMetadata =
-  function(on_receive_metadata) {
+  /**
+   * Adds an onReceiveMetadata method to the builder.
+   * @param {MetadataListener} on_receive_metadata A listener method for
+   * receiving metadata.
+   * @return {ListenerBuilder}
+   */
+  withOnReceiveMetadata(on_receive_metadata) {
     this.metadata = on_receive_metadata;
     return this;
-  };
+  }
 
-/**
- * Adds an onReceiveMessage method to the builder.
- * @param {MessageListener} on_receive_message A listener method for receiving
- * messages.
- * @return {ListenerBuilder}
- */
-ListenerBuilder.prototype.withOnReceiveMessage = function(on_receive_message) {
-  this.message = on_receive_message;
-  return this;
-};
+  /**
+   * Adds an onReceiveMessage method to the builder.
+   * @param {MessageListener} on_receive_message A listener method for receiving
+   * messages.
+   * @return {ListenerBuilder}
+   */
+  withOnReceiveMessage(on_receive_message) {
+    this.message = on_receive_message;
+    return this;
+  }
 
-/**
- * Adds an onReceiveStatus method to the builder.
- * @param {StatusListener} on_receive_status A listener method for receiving
- * status.
- * @return {ListenerBuilder}
- */
-ListenerBuilder.prototype.withOnReceiveStatus = function(on_receive_status) {
-  this.status = on_receive_status;
-  return this;
-};
+  /**
+   * Adds an onReceiveStatus method to the builder.
+   * @param {StatusListener} on_receive_status A listener method for receiving
+   * status.
+   * @return {ListenerBuilder}
+   */
+  withOnReceiveStatus(on_receive_status) {
+    this.status = on_receive_status;
+    return this;
+  }
 
-/**
- * Builds the call listener.
- * @return {grpc~Listener}
- */
-ListenerBuilder.prototype.build = function() {
-  var self = this;
-  var listener = {};
-  listener.onReceiveMetadata = self.metadata;
-  listener.onReceiveMessage = self.message;
-  listener.onReceiveStatus = self.status;
-  return listener;
-};
+  /**
+   * Builds the call listener.
+   * @return {grpc~Listener}
+   */
+  build() {
+    const self = this;
+    const listener = {};
+    listener.onReceiveMetadata = self.metadata;
+    listener.onReceiveMessage = self.message;
+    listener.onReceiveStatus = self.status;
+    return listener;
+  }
+}
 
 /**
  * A builder for the outbound methods of an interceptor.
  * @constructor
  */
-function RequesterBuilder() {
-  this.start = null;
-  this.message = null;
-  this.half_close = null;
-  this.cancel = null;
+export class RequesterBuilder {
+  constructor() {
+    this.start = null;
+    this.message = null;
+    this.half_close = null;
+    this.cancel = null;
+  }
+
+  /**
+   * Add a metadata requester to the builder.
+   * @param {MetadataRequester} start A requester method for handling metadata.
+   * @return {RequesterBuilder}
+   */
+  withStart(start) {
+    this.start = start;
+    return this;
+  }
+
+  /**
+   * Add a message requester to the builder.
+   * @param {MessageRequester} send_message A requester method for handling
+   * messages.
+   * @return {RequesterBuilder}
+   */
+  withSendMessage(send_message) {
+    this.message = send_message;
+    return this;
+  }
+
+  /**
+   * Add a close requester to the builder.
+   * @param {CloseRequester} half_close A requester method for handling client
+   * close.
+   * @return {RequesterBuilder}
+   */
+  withHalfClose(half_close) {
+    this.half_close = half_close;
+    return this;
+  }
+
+  /**
+   * Add a cancel requester to the builder.
+   * @param {CancelRequester} cancel A requester method for handling `cancel`
+   * @return {RequesterBuilder}
+   */
+  withCancel(cancel) {
+    this.cancel = cancel;
+    return this;
+  }
+
+  /**
+   * Builds the requester's interceptor methods.
+   * @return {grpc~Requester}
+   */
+  build() {
+    const requester = {};
+    requester.start = this.start;
+    requester.sendMessage = this.message;
+    requester.halfClose = this.half_close;
+    requester.cancel = this.cancel;
+    return requester;
+  }
 }
-
-/**
- * Add a metadata requester to the builder.
- * @param {MetadataRequester} start A requester method for handling metadata.
- * @return {RequesterBuilder}
- */
-RequesterBuilder.prototype.withStart = function(start) {
-  this.start = start;
-  return this;
-};
-
-/**
- * Add a message requester to the builder.
- * @param {MessageRequester} send_message A requester method for handling
- * messages.
- * @return {RequesterBuilder}
- */
-RequesterBuilder.prototype.withSendMessage = function(send_message) {
-  this.message = send_message;
-  return this;
-};
-
-/**
- * Add a close requester to the builder.
- * @param {CloseRequester} half_close A requester method for handling client
- * close.
- * @return {RequesterBuilder}
- */
-RequesterBuilder.prototype.withHalfClose = function(half_close) {
-  this.half_close = half_close;
-  return this;
-};
-
-/**
- * Add a cancel requester to the builder.
- * @param {CancelRequester} cancel A requester method for handling `cancel`
- * @return {RequesterBuilder}
- */
-RequesterBuilder.prototype.withCancel = function(cancel) {
-  this.cancel = cancel;
-  return this;
-};
-
-/**
- * Builds the requester's interceptor methods.
- * @return {grpc~Requester}
- */
-RequesterBuilder.prototype.build = function() {
-  var requester = {};
-  requester.start = this.start;
-  requester.sendMessage = this.message;
-  requester.halfClose = this.half_close;
-  requester.cancel = this.cancel;
-  return requester;
-};
 
 /**
  * Transforms a list of interceptor providers into interceptors.
@@ -352,18 +356,19 @@ RequesterBuilder.prototype.build = function() {
  * @param {grpc~MethodDefinition} method_definition
  * @return {null|Interceptor[]}
  */
-var resolveInterceptorProviders = function(providers, method_definition) {
+export const resolveInterceptorProviders = (providers, method_definition) => {
   if (!_.isArray(providers)) {
     return null;
   }
-  var interceptors = [];
-  for (var i = 0; i < providers.length; i++) {
-    var provider = providers[i];
-    var interceptor = provider(method_definition);
+  const interceptors = [];
+
+  for (const provider of providers) {
+    const interceptor = provider(method_definition);
     if (interceptor) {
       interceptors.push(interceptor);
     }
   }
+
   return interceptors;
 };
 
@@ -377,142 +382,144 @@ var resolveInterceptorProviders = function(providers, method_definition) {
  * operations.
  * @constructor
  */
-function InterceptingCall(next_call, requester) {
-  this.next_call = next_call;
-  this.requester = requester;
-}
-
-/**
- * Get the next method in the chain or a no-op function if we are at the end
- * of the chain
- * @param {string} method_name
- * @return {function} The next method in the chain
- * @private
- */
-InterceptingCall.prototype._getNextCall = function(method_name) {
-  return this.next_call ?
-    this.next_call[method_name].bind(this.next_call) :
-    function(){};
-};
-
-/**
- * Call the next method in the chain. This will either be on the next
- * InterceptingCall (next_call), or the requester if the requester
- * implements the method.
- * @param {string} method_name The name of the interceptor method
- * @param {array=} args Payload arguments for the operation
- * @param {function=} next The next InterceptingCall's method
- * @return {null}
- * @private
- */
-InterceptingCall.prototype._callNext = function(method_name, args, next) {
-  var args_array = args || [];
-  var next_call = next ? next : this._getNextCall(method_name);
-  if (this.requester && this.requester[method_name]) {
-    // Avoid using expensive `apply` calls
-    var num_args = args_array.length;
-    switch (num_args) {
-      case 0:
-        return this.requester[method_name](next_call);
-      case 1:
-        return this.requester[method_name](args_array[0], next_call);
-      case 2:
-        return this.requester[method_name](args_array[0], args_array[1],
-                                           next_call);
-    }
-  } else {
-    return next_call(args_array[0], args_array[1]);
+export class InterceptingCall {
+  constructor(next_call, requester) {
+    this.next_call = next_call;
+    this.requester = requester;
   }
-};
 
-/**
- * Starts a call through the outbound interceptor chain and adds an element to
- * the reciprocal inbound listener chain.
- * @param {grpc.Metadata} metadata The outgoing metadata.
- * @param {grpc~Listener} listener An intercepting listener for inbound
- * operations.
- */
-InterceptingCall.prototype.start = function(metadata, listener) {
-  var self = this;
+  /**
+   * Get the next method in the chain or a no-op function if we are at the end
+   * of the chain
+   * @param {string} method_name
+   * @return {function} The next method in the chain
+   * @private
+   */
+  _getNextCall(method_name) {
+    return this.next_call ?
+      this.next_call[method_name].bind(this.next_call) :
+      () => {};
+  }
 
-  // If the listener provided is an InterceptingListener, use it. Otherwise, we
-  // must be at the end of the listener chain, and any listener operations
-  // should be terminated in an EndListener.
-  var next_listener = _getInterceptingListener(listener, new EndListener());
-
-  // Build the next method in the interceptor chain
-  var next = function(metadata, current_listener) {
-    // If there is a next call in the chain, run it. Otherwise do nothing.
-    if (self.next_call) {
-      // Wire together any listener provided with the next listener
-      var listener = _getInterceptingListener(current_listener, next_listener);
-      self.next_call.start(metadata, listener);
+  /**
+   * Call the next method in the chain. This will either be on the next
+   * InterceptingCall (next_call), or the requester if the requester
+   * implements the method.
+   * @param {string} method_name The name of the interceptor method
+   * @param {array=} args Payload arguments for the operation
+   * @param {function=} next The next InterceptingCall's method
+   * @return {null}
+   * @private
+   */
+  _callNext(method_name, args, next) {
+    const args_array = args || [];
+    const next_call = next ? next : this._getNextCall(method_name);
+    if (this.requester && this.requester[method_name]) {
+      // Avoid using expensive `apply` calls
+      const num_args = args_array.length;
+      switch (num_args) {
+        case 0:
+          return this.requester[method_name](next_call);
+        case 1:
+          return this.requester[method_name](args_array[0], next_call);
+        case 2:
+          return this.requester[method_name](args_array[0], args_array[1],
+                                             next_call);
+      }
+    } else {
+      return next_call(args_array[0], args_array[1]);
     }
-  };
-  this._callNext('start', [metadata, next_listener], next);
-};
+  }
 
-/**
- * Pass a message through the interceptor chain.
- * @param {jspb.Message} message
- */
-InterceptingCall.prototype.sendMessage = function(message) {
-  this._callNext('sendMessage', [message]);
-};
+  /**
+   * Starts a call through the outbound interceptor chain and adds an element to
+   * the reciprocal inbound listener chain.
+   * @param {grpc.Metadata} metadata The outgoing metadata.
+   * @param {grpc~Listener} listener An intercepting listener for inbound
+   * operations.
+   */
+  start(metadata, listener) {
+    const self = this;
 
-/**
- * Run a close operation through the interceptor chain
- */
-InterceptingCall.prototype.halfClose = function() {
-  this._callNext('halfClose');
-};
+    // If the listener provided is an InterceptingListener, use it. Otherwise, we
+    // must be at the end of the listener chain, and any listener operations
+    // should be terminated in an EndListener.
+    const next_listener = _getInterceptingListener(listener, new EndListener());
 
-/**
- * Run a cancel operation through the interceptor chain
- */
-InterceptingCall.prototype.cancel = function() {
-  this._callNext('cancel');
-};
+    // Build the next method in the interceptor chain
+    const next = (metadata, current_listener) => {
+      // If there is a next call in the chain, run it. Otherwise do nothing.
+      if (self.next_call) {
+        // Wire together any listener provided with the next listener
+        const listener = _getInterceptingListener(current_listener, next_listener);
+        self.next_call.start(metadata, listener);
+      }
+    };
+    this._callNext('start', [metadata, next_listener], next);
+  }
 
-/**
- * Run a cancelWithStatus operation through the interceptor chain.
- * @param {grpc~StatusObject} status
- * @param {string} message
- */
-InterceptingCall.prototype.cancelWithStatus = function(status, message) {
-  this._callNext('cancelWithStatus', [status, message]);
-};
+  /**
+   * Pass a message through the interceptor chain.
+   * @param {jspb.Message} message
+   */
+  sendMessage(message) {
+    this._callNext('sendMessage', [message]);
+  }
 
-/**
- * Pass a getPeer call down to the base gRPC call (should not be intercepted)
- * @return {object}
- */
-InterceptingCall.prototype.getPeer = function() {
-  return this._callNext('getPeer');
-};
+  /**
+   * Run a close operation through the interceptor chain
+   */
+  halfClose() {
+    this._callNext('halfClose');
+  }
 
-/**
- * For streaming calls, we need to transparently pass the stream's context
- * through the interceptor chain. Passes the context between InterceptingCalls
- * but hides it from any requester implementations.
- * @param {object} context Carries objects needed for streaming operations.
- * @param {jspb.Message} message The message to send.
- */
-InterceptingCall.prototype.sendMessageWithContext = function(context, message) {
-  var next = this.next_call ?
-    this.next_call.sendMessageWithContext.bind(this.next_call, context) :
-    context;
-  this._callNext('sendMessage', [message], next);
-};
+  /**
+   * Run a cancel operation through the interceptor chain
+   */
+  cancel() {
+    this._callNext('cancel');
+  }
 
-/**
- * For receiving streaming messages, we need to seed the base interceptor with
- * the streaming context to create a RECV_MESSAGE batch.
- * @param {object} context Carries objects needed for streaming operations
- */
-InterceptingCall.prototype.recvMessageWithContext = function(context) {
-  this._callNext('recvMessageWithContext', [context]);
-};
+  /**
+   * Run a cancelWithStatus operation through the interceptor chain.
+   * @param {grpc~StatusObject} status
+   * @param {string} message
+   */
+  cancelWithStatus(status, message) {
+    this._callNext('cancelWithStatus', [status, message]);
+  }
+
+  /**
+   * Pass a getPeer call down to the base gRPC call (should not be intercepted)
+   * @return {object}
+   */
+  getPeer() {
+    return this._callNext('getPeer');
+  }
+
+  /**
+   * For streaming calls, we need to transparently pass the stream's context
+   * through the interceptor chain. Passes the context between InterceptingCalls
+   * but hides it from any requester implementations.
+   * @param {object} context Carries objects needed for streaming operations.
+   * @param {jspb.Message} message The message to send.
+   */
+  sendMessageWithContext(context, message) {
+    const next = this.next_call ?
+      this.next_call.sendMessageWithContext.bind(this.next_call, context) :
+      context;
+    this._callNext('sendMessage', [message], next);
+  }
+
+  /**
+   * For receiving streaming messages, we need to seed the base interceptor with
+   * the streaming context to create a RECV_MESSAGE batch.
+   * @param {object} context Carries objects needed for streaming operations
+   */
+  recvMessageWithContext(context) {
+    this._callNext('recvMessageWithContext', [context]);
+  }
+}
 
 /**
  * A chain-able listener object which will delegate to a custom listener when
@@ -523,96 +530,98 @@ InterceptingCall.prototype.recvMessageWithContext = function(context) {
  * specific operations
  * @constructor
  */
-function InterceptingListener(next_listener, delegate) {
-  this.delegate = delegate || {};
-  this.next_listener = next_listener;
-}
+class InterceptingListener {
+  constructor(next_listener, delegate) {
+    this.delegate = delegate || {};
+    this.next_listener = next_listener;
+  }
 
-/**
- * Get the next method in the chain or a no-op function if we are at the end
- * of the chain.
- * @param {string} method_name The name of the listener method.
- * @return {function} The next method in the chain
- * @private
- */
-InterceptingListener.prototype._getNextListener = function(method_name) {
-  return this.next_listener ?
-    this.next_listener[method_name].bind(this.next_listener) :
-    function(){};
-};
+  /**
+   * Get the next method in the chain or a no-op function if we are at the end
+   * of the chain.
+   * @param {string} method_name The name of the listener method.
+   * @return {function} The next method in the chain
+   * @private
+   */
+  _getNextListener(method_name) {
+    return this.next_listener ?
+      this.next_listener[method_name].bind(this.next_listener) :
+      () => {};
+  }
 
-/**
- * Call the next method in the chain. This will either be on the next
- * InterceptingListener (next_listener), or the requester if the requester
- * implements the method.
- * @param {string} method_name The name of the interceptor method
- * @param {array=} args Payload arguments for the operation
- * @param {function=} next The next InterceptingListener's method
- * @return {null}
- * @private
- */
-InterceptingListener.prototype._callNext = function(method_name, args, next) {
-  var args_array = args || [];
-  var next_listener = next ? next : this._getNextListener(method_name);
-  if (this.delegate && this.delegate[method_name]) {
-    // Avoid using expensive `apply` calls
-    var num_args = args_array.length;
-    switch (num_args) {
-      case 0:
-        return this.delegate[method_name](next_listener);
-      case 1:
-        return this.delegate[method_name](args_array[0], next_listener);
-      case 2:
-        return this.delegate[method_name](args_array[0], args_array[1],
-                                          next_listener);
+  /**
+   * Call the next method in the chain. This will either be on the next
+   * InterceptingListener (next_listener), or the requester if the requester
+   * implements the method.
+   * @param {string} method_name The name of the interceptor method
+   * @param {array=} args Payload arguments for the operation
+   * @param {function=} next The next InterceptingListener's method
+   * @return {null}
+   * @private
+   */
+  _callNext(method_name, args, next) {
+    const args_array = args || [];
+    const next_listener = next ? next : this._getNextListener(method_name);
+    if (this.delegate && this.delegate[method_name]) {
+      // Avoid using expensive `apply` calls
+      const num_args = args_array.length;
+      switch (num_args) {
+        case 0:
+          return this.delegate[method_name](next_listener);
+        case 1:
+          return this.delegate[method_name](args_array[0], next_listener);
+        case 2:
+          return this.delegate[method_name](args_array[0], args_array[1],
+                                            next_listener);
+      }
+    } else {
+      return next_listener(args_array[0], args_array[1]);
     }
-  } else {
-    return next_listener(args_array[0], args_array[1]);
   }
-};
-/**
- * Inbound metadata receiver.
- * @param {Metadata} metadata
- */
-InterceptingListener.prototype.onReceiveMetadata = function(metadata) {
-  this._callNext('onReceiveMetadata', [metadata]);
-};
 
-/**
- * Inbound message receiver.
- * @param {jspb.Message} message
- */
-InterceptingListener.prototype.onReceiveMessage = function(message) {
-  this._callNext('onReceiveMessage', [message]);
-};
-
-/**
- * When intercepting streaming message, we need to pass the streaming context
- * transparently along the chain. Hides the context from the delegate listener
- * methods.
- * @param {object} context Carries objects needed for streaming operations.
- * @param {jspb.Message} message The message received.
- */
-InterceptingListener.prototype.recvMessageWithContext = function(context,
-                                                                 message) {
-  var fallback = this.next_listener.recvMessageWithContext;
-  var next_method = this.next_listener ?
-    fallback.bind(this.next_listener, context) :
-    context;
-  if (this.delegate.onReceiveMessage) {
-    this.delegate.onReceiveMessage(message, next_method, context);
-  } else {
-    next_method(message);
+  /**
+   * Inbound metadata receiver.
+   * @param {Metadata} metadata
+   */
+  onReceiveMetadata(metadata) {
+    this._callNext('onReceiveMetadata', [metadata]);
   }
-};
 
-/**
- * Inbound status receiver.
- * @param {grpc~StatusObject} status
- */
-InterceptingListener.prototype.onReceiveStatus = function(status) {
-  this._callNext('onReceiveStatus', [status]);
-};
+  /**
+   * Inbound message receiver.
+   * @param {jspb.Message} message
+   */
+  onReceiveMessage(message) {
+    this._callNext('onReceiveMessage', [message]);
+  }
+
+  /**
+   * When intercepting streaming message, we need to pass the streaming context
+   * transparently along the chain. Hides the context from the delegate listener
+   * methods.
+   * @param {object} context Carries objects needed for streaming operations.
+   * @param {jspb.Message} message The message received.
+   */
+  recvMessageWithContext(context, message) {
+    const fallback = this.next_listener.recvMessageWithContext;
+    const next_method = this.next_listener ?
+      fallback.bind(this.next_listener, context) :
+      context;
+    if (this.delegate.onReceiveMessage) {
+      this.delegate.onReceiveMessage(message, next_method, context);
+    } else {
+      next_method(message);
+    }
+  }
+
+  /**
+   * Inbound status receiver.
+   * @param {grpc~StatusObject} status
+   */
+  onReceiveStatus(status) {
+    this._callNext('onReceiveStatus', [status]);
+  }
+}
 
 /**
  * A dead-end listener used to terminate a call chain. Used when an interceptor
@@ -620,11 +629,12 @@ InterceptingListener.prototype.onReceiveStatus = function(status) {
  * terminate here.
  * @constructor
  */
-function EndListener() {}
-EndListener.prototype.onReceiveMetadata = function(){};
-EndListener.prototype.onReceiveMessage = function(){};
-EndListener.prototype.onReceiveStatus = function(){};
-EndListener.prototype.recvMessageWithContext = function(){};
+class EndListener {
+  onReceiveMetadata() {}
+  onReceiveMessage() {}
+  onReceiveStatus() {}
+  recvMessageWithContext() {}
+}
 
 /**
  * Get a call object built with the provided options.
@@ -633,11 +643,11 @@ EndListener.prototype.recvMessageWithContext = function(){};
  * @param {grpc.Client~CallOptions=} options Options object.
  */
 function getCall(channel, path, options) {
-  var deadline;
-  var host;
-  var parent;
-  var propagate_flags;
-  var credentials;
+  let deadline;
+  let host;
+  let parent;
+  let propagate_flags;
+  let credentials;
   if (options) {
     deadline = options.deadline;
     host = options.host;
@@ -648,7 +658,7 @@ function getCall(channel, path, options) {
   if (deadline === undefined) {
     deadline = Infinity;
   }
-  var call = new grpc.Call(channel, path, deadline, host,
+  const call = new grpc.Call(channel, path, deadline, host,
                            parent, propagate_flags);
   if (credentials) {
     call.setCredentials(credentials);
@@ -656,7 +666,7 @@ function getCall(channel, path, options) {
   return call;
 }
 
-var OP_DEPENDENCIES = {
+const OP_DEPENDENCIES = {
   [grpc.opType.SEND_MESSAGE]: [grpc.opType.SEND_INITIAL_METADATA],
   [grpc.opType.SEND_CLOSE_FROM_CLIENT]: [grpc.opType.SEND_MESSAGE],
   [grpc.opType.RECV_MESSAGE]: [grpc.opType.SEND_INITIAL_METADATA]
@@ -672,15 +682,15 @@ var OP_DEPENDENCIES = {
  * @return {Function}
  */
 function _getStreamReadCallback(emitter, call, get_listener, deserialize) {
-  return function (err, response) {
+  return (err, response) => {
     if (err) {
       // Something has gone wrong. Stop reading and wait for status
       emitter.finished = true;
       emitter._readsDone();
       return;
     }
-    var data = response.read;
-    var deserialized;
+    const data = response.read;
+    let deserialized;
     try {
       deserialized = deserialize(data);
     } catch (e) {
@@ -694,10 +704,10 @@ function _getStreamReadCallback(emitter, call, get_listener, deserialize) {
       emitter._readsDone();
       return;
     }
-    var listener = get_listener();
-    var context = {
-      call: call,
-      listener: listener
+    const listener = get_listener();
+    const context = {
+      call,
+      listener
     };
     listener.recvMessageWithContext(context, deserialized);
   };
@@ -711,16 +721,15 @@ function _getStreamReadCallback(emitter, call, get_listener, deserialize) {
  * @return {boolean}
  */
 function _areBatchRequirementsMet(batch_ops, completed_ops) {
-  var dependencies = _.flatMap(batch_ops, function(op) {
-    return OP_DEPENDENCIES[op] || [];
-  });
-  for (var i = 0; i < dependencies.length; i++) {
-    var required_dep = dependencies[i];
-    if (batch_ops.indexOf(required_dep) === -1 &&
-        completed_ops.indexOf(required_dep) === -1) {
+  const dependencies = _.flatMap(batch_ops, op => OP_DEPENDENCIES[op] || []);
+
+  for (const required_dep of dependencies) {
+    if (!batch_ops.includes(required_dep) &&
+        !completed_ops.includes(required_dep)) {
       return false;
     }
   }
+
   return true;
 }
 
@@ -739,16 +748,16 @@ function _areBatchRequirementsMet(batch_ops, completed_ops) {
  * @return {object}
  */
 function _startBatchIfReady(call, batch, batch_state, callback) {
-  var completed_ops = batch_state.completed_ops;
-  var deferred_batches = batch_state.deferred_batches;
-  var batch_ops = _.map(_.keys(batch), Number);
+  let completed_ops = batch_state.completed_ops;
+  let deferred_batches = batch_state.deferred_batches;
+  const batch_ops = _.map(_.keys(batch), Number);
   if (_areBatchRequirementsMet(batch_ops, completed_ops)) {
     // Dependencies are met, start the batch and any deferred batches whose
     // dependencies are met as a result.
     call.startBatch(batch, callback);
     completed_ops = _.union(completed_ops, batch_ops);
-    deferred_batches = _.flatMap(deferred_batches, function(deferred_batch) {
-      var deferred_batch_ops = _.map(_.keys(deferred_batch), Number);
+    deferred_batches = _.flatMap(deferred_batches, deferred_batch => {
+      const deferred_batch_ops = _.map(_.keys(deferred_batch), Number);
       if (_areBatchRequirementsMet(deferred_batch_ops, completed_ops)) {
         call.startBatch(deferred_batch.batch, deferred_batch.callback);
         return [];
@@ -758,13 +767,13 @@ function _startBatchIfReady(call, batch, batch_state, callback) {
   } else {
     // Dependencies are not met, defer the batch
     deferred_batches = deferred_batches.concat({
-      batch: batch,
-      callback: callback
+      batch,
+      callback
     });
   }
   return {
-    completed_ops: completed_ops,
-    deferred_batches: deferred_batches
+    completed_ops,
+    deferred_batches
   };
 }
 
@@ -778,44 +787,44 @@ function _startBatchIfReady(call, batch, batch_state, callback) {
  * @return {Interceptor}
  */
 function _getUnaryInterceptor(method_definition, channel, emitter, callback) {
-  var serialize = method_definition.requestSerialize;
-  var deserialize = method_definition.responseDeserialize;
-  return function (options) {
-    var call = getCall(channel, method_definition.path, options);
-    var first_listener;
-    var final_requester = {};
-    var batch_state = {
+  const serialize = method_definition.requestSerialize;
+  const deserialize = method_definition.responseDeserialize;
+  return options => {
+    const call = getCall(channel, method_definition.path, options);
+    let first_listener;
+    const final_requester = {};
+    let batch_state = {
       completed_ops: [],
       deferred_batches: []
     };
-    final_requester.start = function (metadata, listener) {
-      var batch = {
+    final_requester.start = (metadata, listener) => {
+      const batch = {
         [grpc.opType.SEND_INITIAL_METADATA]:
           metadata._getCoreRepresentation(),
       };
       first_listener = listener;
       batch_state = _startBatchIfReady(call, batch, batch_state,
-                                       function() {});
+                                       () => {});
     };
-    final_requester.sendMessage = function (message) {
-      var batch = {
+    final_requester.sendMessage = message => {
+      const batch = {
         [grpc.opType.SEND_MESSAGE]: serialize(message),
       };
       batch_state = _startBatchIfReady(call, batch, batch_state,
-                                         function() {});
+                                         () => {});
     };
-    final_requester.halfClose = function () {
-      var batch = {
+    final_requester.halfClose = () => {
+      const batch = {
         [grpc.opType.SEND_CLOSE_FROM_CLIENT]: true,
         [grpc.opType.RECV_INITIAL_METADATA]: true,
         [grpc.opType.RECV_MESSAGE]: true,
         [grpc.opType.RECV_STATUS_ON_CLIENT]: true
       };
-      var callback = function (err, response) {
+      const callback = (err, response) => {
         response.status.metadata = Metadata._fromCoreRepresentation(
           response.status.metadata);
-        var status = response.status;
-        var deserialized;
+        let status = response.status;
+        let deserialized;
         if (status.code === constants.status.OK) {
           if (err) {
             // Got a batch error, but OK status. Something went wrong
@@ -842,12 +851,10 @@ function _getUnaryInterceptor(method_definition, channel, emitter, callback) {
       };
       batch_state = _startBatchIfReady(call, batch, batch_state, callback);
     };
-    final_requester.cancel = function () {
+    final_requester.cancel = () => {
       call.cancel();
     };
-    final_requester.getPeer = function () {
-      return call.getPeer();
-    };
+    final_requester.getPeer = () => call.getPeer();
     return new InterceptingCall(null, final_requester);
   };
 }
@@ -864,19 +871,19 @@ function _getUnaryInterceptor(method_definition, channel, emitter, callback) {
  */
 function _getClientStreamingInterceptor(method_definition, channel, emitter,
   callback) {
-  var serialize = common.wrapIgnoreNull(method_definition.requestSerialize);
-  var deserialize = method_definition.responseDeserialize;
-  return function (options) {
-    var first_listener;
-    var call = getCall(channel, method_definition.path, options);
-    var final_requester = {};
-    final_requester.start = function (metadata, listener) {
-      var metadata_batch = {
+  const serialize = common.wrapIgnoreNull(method_definition.requestSerialize);
+  const deserialize = method_definition.responseDeserialize;
+  return options => {
+    let first_listener;
+    const call = getCall(channel, method_definition.path, options);
+    const final_requester = {};
+    final_requester.start = (metadata, listener) => {
+      const metadata_batch = {
         [grpc.opType.SEND_INITIAL_METADATA]: metadata._getCoreRepresentation(),
         [grpc.opType.RECV_INITIAL_METADATA]: true
       };
       first_listener = listener;
-      call.startBatch(metadata_batch, function (err, response) {
+      call.startBatch(metadata_batch, (err, response) => {
         if (err) {
           // The call has stopped for some reason. A non-OK status will arrive
           // in the other batch.
@@ -885,14 +892,14 @@ function _getClientStreamingInterceptor(method_definition, channel, emitter,
         response.metadata = Metadata._fromCoreRepresentation(response.metadata);
         listener.onReceiveMetadata(response.metadata);
       });
-      var recv_batch = {};
+      const recv_batch = {};
       recv_batch[grpc.opType.RECV_MESSAGE] = true;
       recv_batch[grpc.opType.RECV_STATUS_ON_CLIENT] = true;
-      call.startBatch(recv_batch, function (err, response) {
+      call.startBatch(recv_batch, (err, response) => {
         response.status.metadata = Metadata._fromCoreRepresentation(
           response.status.metadata);
-        var status = response.status;
-        var deserialized;
+        let status = response.status;
+        let deserialized;
         if (status.code === constants.status.OK) {
           if (err) {
             // Got a batch error, but OK status. Something went wrong
@@ -915,12 +922,12 @@ function _getClientStreamingInterceptor(method_definition, channel, emitter,
         listener.onReceiveStatus(status);
       });
     };
-    final_requester.sendMessage = function (chunk, context) {
-      var message;
-      var callback = (context && context.callback) ?
+    final_requester.sendMessage = (chunk, context) => {
+      let message;
+      const callback = (context && context.callback) ?
         context.callback :
-        function () { };
-      var encoding = (context && context.encoding) ?
+        () => { };
+      const encoding = (context && context.encoding) ?
         context.encoding :
         '';
       try {
@@ -941,25 +948,23 @@ function _getClientStreamingInterceptor(method_definition, channel, emitter,
          * can get to checking that it is valid flags */
         message.grpcWriteFlags = encoding;
       }
-      var batch = {
+      const batch = {
         [grpc.opType.SEND_MESSAGE]: message
       };
-      call.startBatch(batch, function (err, event) {
+      call.startBatch(batch, (err, event) => {
         callback(err, event);
       });
     };
-    final_requester.halfClose = function () {
-      var batch = {
+    final_requester.halfClose = () => {
+      const batch = {
         [grpc.opType.SEND_CLOSE_FROM_CLIENT]: true
       };
-      call.startBatch(batch, function () { });
+      call.startBatch(batch, () => { });
     };
-    final_requester.cancel = function () {
+    final_requester.cancel = () => {
       call.cancel();
     };
-    final_requester.getPeer = function() {
-      return call.getPeer();
-    };
+    final_requester.getPeer = () => call.getPeer();
     return new InterceptingCall(null, final_requester);
   };
 }
@@ -974,28 +979,26 @@ function _getClientStreamingInterceptor(method_definition, channel, emitter,
  * @return {Interceptor}
  */
 function _getServerStreamingInterceptor(method_definition, channel, emitter) {
-  var deserialize = common.wrapIgnoreNull(
+  const deserialize = common.wrapIgnoreNull(
     method_definition.responseDeserialize);
-  var serialize = method_definition.requestSerialize;
-  return function (options) {
-    var batch_state = {
+  const serialize = method_definition.requestSerialize;
+  return options => {
+    let batch_state = {
       completed_ops: [],
       deferred_batches: []
     };
-    var call = getCall(channel, method_definition.path, options);
-    var final_requester = {};
-    var first_listener;
-    var get_listener = function() {
-      return first_listener;
-    };
-    final_requester.start = function(metadata, listener) {
+    const call = getCall(channel, method_definition.path, options);
+    const final_requester = {};
+    let first_listener;
+    const get_listener = () => first_listener;
+    final_requester.start = (metadata, listener) => {
       first_listener = listener;
       metadata = metadata.clone();
-      var metadata_batch = {
+      const metadata_batch = {
         [grpc.opType.SEND_INITIAL_METADATA]: metadata._getCoreRepresentation(),
         [grpc.opType.RECV_INITIAL_METADATA]: true
       };
-      var callback = function(err, response) {
+      const callback = (err, response) => {
         if (err) {
           // The call has stopped for some reason. A non-OK status will arrive
           // in the other batch.
@@ -1006,10 +1009,10 @@ function _getServerStreamingInterceptor(method_definition, channel, emitter) {
       };
       batch_state = _startBatchIfReady(call, metadata_batch, batch_state,
                                        callback);
-      var status_batch = {
+      const status_batch = {
         [grpc.opType.RECV_STATUS_ON_CLIENT]: true
       };
-      call.startBatch(status_batch, function(err, response) {
+      call.startBatch(status_batch, (err, response) => {
         if (err) {
           emitter.emit('error', err);
           return;
@@ -1019,15 +1022,15 @@ function _getServerStreamingInterceptor(method_definition, channel, emitter) {
         first_listener.onReceiveStatus(response.status);
       });
     };
-    final_requester.sendMessage = function(argument) {
-      var message = serialize(argument);
+    final_requester.sendMessage = argument => {
+      const message = serialize(argument);
       if (options) {
         message.grpcWriteFlags = options.flags;
       }
-      var send_batch = {
+      const send_batch = {
         [grpc.opType.SEND_MESSAGE]: message
       };
-      var callback = function(err, response) {
+      const callback = (err, response) => {
         if (err) {
           // The call has stopped for some reason. A non-OK status will arrive
           // in the other batch.
@@ -1036,26 +1039,24 @@ function _getServerStreamingInterceptor(method_definition, channel, emitter) {
       };
       batch_state = _startBatchIfReady(call, send_batch, batch_state, callback);
     };
-    final_requester.halfClose = function() {
-      var batch = {
+    final_requester.halfClose = () => {
+      const batch = {
         [grpc.opType.SEND_CLOSE_FROM_CLIENT]: true
       };
-      batch_state = _startBatchIfReady(call, batch, batch_state, function() {});
+      batch_state = _startBatchIfReady(call, batch, batch_state, () => {});
     };
-    final_requester.recvMessageWithContext = function(context) {
-      var recv_batch = {
+    final_requester.recvMessageWithContext = context => {
+      const recv_batch = {
         [grpc.opType.RECV_MESSAGE]: true
       };
-      var callback = _getStreamReadCallback(emitter, call,
+      const callback = _getStreamReadCallback(emitter, call,
         get_listener, deserialize);
       batch_state = _startBatchIfReady(call, recv_batch, batch_state, callback);
     };
-    final_requester.cancel = function() {
+    final_requester.cancel = () => {
       call.cancel();
     };
-    final_requester.getPeer = function() {
-      return call.getPeer();
-    };
+    final_requester.getPeer = () => call.getPeer();
     return new InterceptingCall(null, final_requester);
   };
 }
@@ -1070,23 +1071,21 @@ function _getServerStreamingInterceptor(method_definition, channel, emitter) {
  * @return {Interceptor}
  */
 function _getBidiStreamingInterceptor(method_definition, channel, emitter) {
-  var serialize = common.wrapIgnoreNull(method_definition.requestSerialize);
-  var deserialize = common.wrapIgnoreNull(
+  const serialize = common.wrapIgnoreNull(method_definition.requestSerialize);
+  const deserialize = common.wrapIgnoreNull(
     method_definition.responseDeserialize);
-  return function (options) {
-    var first_listener;
-    var get_listener = function() {
-      return first_listener;
-    };
-    var call = getCall(channel, method_definition.path, options);
-    var final_requester = {};
-    final_requester.start = function (metadata, listener) {
-      var metadata_batch = {
+  return options => {
+    let first_listener;
+    const get_listener = () => first_listener;
+    const call = getCall(channel, method_definition.path, options);
+    const final_requester = {};
+    final_requester.start = (metadata, listener) => {
+      const metadata_batch = {
         [grpc.opType.SEND_INITIAL_METADATA]: metadata._getCoreRepresentation(),
         [grpc.opType.RECV_INITIAL_METADATA]: true
       };
       first_listener = listener;
-      call.startBatch(metadata_batch, function (err, response) {
+      call.startBatch(metadata_batch, (err, response) => {
         if (err) {
           // The call has stopped for some reason. A non-OK status will arrive
           // in the other batch.
@@ -1095,10 +1094,10 @@ function _getBidiStreamingInterceptor(method_definition, channel, emitter) {
         response.metadata = Metadata._fromCoreRepresentation(response.metadata);
         listener.onReceiveMetadata(response.metadata);
       });
-      var recv_batch = {};
+      const recv_batch = {};
       recv_batch[grpc.opType.RECV_STATUS_ON_CLIENT] = true;
-      call.startBatch(recv_batch, function (err, response) {
-        var status = response.status;
+      call.startBatch(recv_batch, (err, response) => {
+        const status = response.status;
         if (status.code === constants.status.OK) {
           if (err) {
             emitter.emit('error', err);
@@ -1110,12 +1109,12 @@ function _getBidiStreamingInterceptor(method_definition, channel, emitter) {
         listener.onReceiveStatus(status);
       });
     };
-    final_requester.sendMessage = function (chunk, context) {
-      var message;
-      var callback = (context && context.callback) ?
+    final_requester.sendMessage = (chunk, context) => {
+      let message;
+      const callback = (context && context.callback) ?
         context.callback :
-        function() {};
-      var encoding = (context && context.encoding) ?
+        () => {};
+      const encoding = (context && context.encoding) ?
         context.encoding :
         '';
       try {
@@ -1136,32 +1135,30 @@ function _getBidiStreamingInterceptor(method_definition, channel, emitter) {
          * can get to checking that it is valid flags */
         message.grpcWriteFlags = encoding;
       }
-      var batch = {
+      const batch = {
         [grpc.opType.SEND_MESSAGE]: message
       };
-      call.startBatch(batch, function (err, event) {
+      call.startBatch(batch, (err, event) => {
         callback(err, event);
       });
     };
-    final_requester.halfClose = function () {
-      var batch = {
+    final_requester.halfClose = () => {
+      const batch = {
         [grpc.opType.SEND_CLOSE_FROM_CLIENT]: true
       };
-      call.startBatch(batch, function () { });
+      call.startBatch(batch, () => { });
     };
-    final_requester.recvMessageWithContext = function(context) {
-      var recv_batch = {
+    final_requester.recvMessageWithContext = context => {
+      const recv_batch = {
         [grpc.opType.RECV_MESSAGE]: true
       };
       call.startBatch(recv_batch, _getStreamReadCallback(emitter, call,
         get_listener, deserialize));
     };
-    final_requester.cancel = function() {
+    final_requester.cancel = () => {
       call.cancel();
     };
-    final_requester.getPeer = function() {
-      return call.getPeer();
-    };
+    final_requester.getPeer = () => call.getPeer();
     return new InterceptingCall(null, final_requester);
   };
 }
@@ -1175,17 +1172,17 @@ function _getBidiStreamingInterceptor(method_definition, channel, emitter) {
  * @return {grpc~Listener}
  */
 function _getUnaryListener(method_definition, emitter, callback) {
-  var resultMessage;
+  let resultMessage;
   return {
-    onReceiveMetadata: function (metadata) {
+    onReceiveMetadata(metadata) {
       emitter.emit('metadata', metadata);
     },
-    onReceiveMessage: function (message) {
+    onReceiveMessage(message) {
       resultMessage = message;
     },
-    onReceiveStatus: function (status) {
+    onReceiveStatus(status) {
       if (status.code !== constants.status.OK) {
-        var error = common.createStatusError(status);
+        const error = common.createStatusError(status);
         callback(error);
       } else {
         callback(null, resultMessage);
@@ -1204,17 +1201,17 @@ function _getUnaryListener(method_definition, emitter, callback) {
  * @return {grpc~Listener}
  */
 function _getClientStreamingListener(method_definition, emitter, callback) {
-  var resultMessage;
+  let resultMessage;
   return {
-    onReceiveMetadata: function (metadata) {
+    onReceiveMetadata(metadata) {
       emitter.emit('metadata', metadata);
     },
-    onReceiveMessage: function (message) {
+    onReceiveMessage(message) {
       resultMessage = message;
     },
-    onReceiveStatus: function (status) {
+    onReceiveStatus(status) {
       if (status.code !== constants.status.OK) {
-        var error = common.createStatusError(status);
+        const error = common.createStatusError(status);
         callback(error);
       } else {
         callback(null, resultMessage);
@@ -1232,19 +1229,17 @@ function _getClientStreamingListener(method_definition, emitter, callback) {
  * @return {grpc~Listener}
  */
 function _getServerStreamingListener(method_definition, emitter) {
-  var deserialize = common.wrapIgnoreNull(
+  const deserialize = common.wrapIgnoreNull(
     method_definition.responseDeserialize);
   return {
-    onReceiveMetadata: function (metadata) {
+    onReceiveMetadata(metadata) {
       emitter.emit('metadata', metadata);
     },
-    onReceiveMessage: function(message, next, context) {
+    onReceiveMessage(message, next, context) {
       if (emitter.push(message) && message !== null) {
-        var call = context.call;
-        var get_listener = function() {
-          return context.listener;
-        };
-        var read_batch = {};
+        const call = context.call;
+        const get_listener = () => context.listener;
+        const read_batch = {};
         read_batch[grpc.opType.RECV_MESSAGE] = true;
         call.startBatch(read_batch, _getStreamReadCallback(emitter, call,
           get_listener, deserialize));
@@ -1252,7 +1247,7 @@ function _getServerStreamingListener(method_definition, emitter) {
         emitter.reading = false;
       }
     },
-    onReceiveStatus: function (status) {
+    onReceiveStatus(status) {
       emitter._receiveStatus(status);
     }
   };
@@ -1266,19 +1261,17 @@ function _getServerStreamingListener(method_definition, emitter) {
  * @return {grpc~Listener}
  */
 function _getBidiStreamingListener(method_definition, emitter) {
-  var deserialize = common.wrapIgnoreNull(
+  const deserialize = common.wrapIgnoreNull(
     method_definition.responseDeserialize);
   return {
-    onReceiveMetadata: function (metadata) {
+    onReceiveMetadata(metadata) {
       emitter.emit('metadata', metadata);
     },
-    onReceiveMessage: function(message, next, context) {
+    onReceiveMessage(message, next, context) {
       if (emitter.push(message) && message !== null) {
-        var call = context.call;
-        var get_listener = function() {
-          return context.listener;
-        };
-        var read_batch = {};
+        const call = context.call;
+        const get_listener = () => context.listener;
+        const read_batch = {};
         read_batch[grpc.opType.RECV_MESSAGE] = true;
         call.startBatch(read_batch, _getStreamReadCallback(emitter, call,
           get_listener, deserialize));
@@ -1286,20 +1279,20 @@ function _getBidiStreamingListener(method_definition, emitter) {
         emitter.reading = false;
       }
     },
-    onReceiveStatus: function (status) {
+    onReceiveStatus(status) {
       emitter._receiveStatus(status);
     }
   };
 }
 
-var interceptorGenerators = {
+const interceptorGenerators = {
   [methodTypes.UNARY]: _getUnaryInterceptor,
   [methodTypes.CLIENT_STREAMING]: _getClientStreamingInterceptor,
   [methodTypes.SERVER_STREAMING]: _getServerStreamingInterceptor,
   [methodTypes.BIDI_STREAMING]: _getBidiStreamingInterceptor
 };
 
-var listenerGenerators = {
+const listenerGenerators = {
   [methodTypes.UNARY]: _getUnaryListener,
   [methodTypes.CLIENT_STREAMING]: _getClientStreamingListener,
   [methodTypes.SERVER_STREAMING]: _getServerStreamingListener,
@@ -1313,20 +1306,20 @@ var listenerGenerators = {
  * @param {function=} callback
  * @return {grpc~Listener}
  */
-function getLastListener(method_definition, emitter, callback) {
+export function getLastListener(method_definition, emitter, callback) {
   if (emitter instanceof Function) {
     callback = emitter;
-    callback = function() {};
+    callback = () => {};
   }
   if (!(callback instanceof Function)) {
-    callback = function() {};
+    callback = () => {};
   }
   if (!((emitter instanceof EventEmitter) &&
        (callback instanceof Function))) {
     throw new Error('Argument mismatch in getLastListener');
   }
-  var method_type = common.getMethodType(method_definition);
-  var generator = listenerGenerators[method_type];
+  const method_type = common.getMethodType(method_definition);
+  const generator = listenerGenerators[method_type];
   return generator(method_definition, emitter, callback);
 }
 
@@ -1338,11 +1331,11 @@ function getLastListener(method_definition, emitter, callback) {
  * @param {grpc.Channel} channel
  * @param {function|EventEmitter} responder
  */
-function getInterceptingCall(method_definition, options,
+export function getInterceptingCall(method_definition, options,
                              interceptors, channel, responder) {
-  var last_interceptor = _getLastInterceptor(method_definition, channel,
+  const last_interceptor = _getLastInterceptor(method_definition, channel,
                                             responder);
-  var all_interceptors = interceptors.concat(last_interceptor);
+  const all_interceptors = interceptors.concat(last_interceptor);
   return _buildChain(all_interceptors, options);
 }
 
@@ -1355,11 +1348,11 @@ function getInterceptingCall(method_definition, options,
  * @return {Interceptor}
  */
 function _getLastInterceptor(method_definition, channel, responder) {
-  var callback = (responder instanceof Function) ? responder : function() {};
-  var emitter = (responder instanceof EventEmitter) ? responder :
+  const callback = (responder instanceof Function) ? responder : () => {};
+  const emitter = (responder instanceof EventEmitter) ? responder :
                                                       new EventEmitter();
-  var method_type = common.getMethodType(method_definition);
-  var generator = interceptorGenerators[method_type];
+  const method_type = common.getMethodType(method_definition);
+  const generator = interceptorGenerators[method_type];
   return generator(method_definition, channel, emitter, callback);
 }
 
@@ -1371,17 +1364,15 @@ function _getLastInterceptor(method_definition, channel, responder) {
  * @return {InterceptingCall}
  */
 function _buildChain(interceptors, options) {
-  var next = function(interceptors) {
+  const next = interceptors => {
     if (interceptors.length === 0) {
-      return function (options) {};
+      return options => {};
     }
-    var head_interceptor = interceptors[0];
-    var rest_interceptors = interceptors.slice(1);
-    return function (options) {
-      return head_interceptor(options, next(rest_interceptors));
-    };
+    const head_interceptor = interceptors[0];
+    const rest_interceptors = interceptors.slice(1);
+    return options => head_interceptor(options, next(rest_interceptors));
   };
-  var chain = next(interceptors)(options);
+  const chain = next(interceptors)(options);
   return new InterceptingCall(chain);
 }
 
@@ -1410,14 +1401,4 @@ function _isInterceptingListener(listener) {
   return listener && listener.constructor.name === 'InterceptingListener';
 }
 
-exports.resolveInterceptorProviders = resolveInterceptorProviders;
-
-exports.InterceptingCall = InterceptingCall;
-exports.ListenerBuilder = ListenerBuilder;
-exports.RequesterBuilder = RequesterBuilder;
-exports.StatusBuilder = StatusBuilder;
-
-exports.InterceptorConfigurationError = InterceptorConfigurationError;
-
-exports.getInterceptingCall = getInterceptingCall;
-exports.getLastListener = getLastListener;
+export {getLastListener};

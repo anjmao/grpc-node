@@ -16,13 +16,11 @@
  *
  */
 
-'use strict';
+import * as _ from 'lodash';
 
-var _ = require('lodash');
+import grpc from './grpc_extension';
 
-var grpc = require('./grpc_extension');
-
-var common = require('./common');
+import * as common from './common';
 
 var Metadata = require('./metadata');
 
@@ -516,8 +514,8 @@ ServerDuplexStream.prototype.getPeer = getPeer;
  */
 function waitForCancel() {
   /* jshint validthis: true */
-  var self = this;
-  var cancel_batch = {};
+  let self = this;
+  let cancel_batch = {};
   cancel_batch[grpc.opType.RECV_CLOSE_ON_SERVER] = true;
   self.call.startBatch(cancel_batch, function(err, result) {
     if (err) {
@@ -567,12 +565,12 @@ ServerDuplexStream.prototype.waitForCancel = waitForCancel;
  * @param {grpc.Metadata} metadata Metadata from the client
  */
 function handleUnary(call, handler, metadata) {
-  var emitter = new ServerUnaryCall(call, metadata);
+  let emitter = new ServerUnaryCall(call, metadata);
   emitter.on('error', function(error) {
     handleError(call, error);
   });
   emitter.waitForCancel();
-  var batch = {};
+  let batch = {};
   batch[grpc.opType.RECV_MESSAGE] = true;
   call.startBatch(batch, function(err, result) {
     if (err) {
@@ -622,9 +620,9 @@ function handleUnary(call, handler, metadata) {
  * @param {grpc.Metadata} metadata Metadata from the client
  */
 function handleServerStreaming(call, handler, metadata) {
-  var stream = new ServerWritableStream(call, metadata, handler.serialize);
+  let stream = new ServerWritableStream(call, metadata, handler.serialize);
   stream.waitForCancel();
-  var batch = {};
+  let batch = {};
   batch[grpc.opType.RECV_MESSAGE] = true;
   call.startBatch(batch, function(err, result) {
     if (err) {
@@ -664,7 +662,7 @@ function handleServerStreaming(call, handler, metadata) {
  * @param {grpc.Metadata} metadata Metadata from the client
  */
 function handleClientStreaming(call, handler, metadata) {
-  var stream = new ServerReadableStream(call, metadata, handler.deserialize);
+  let stream = new ServerReadableStream(call, metadata, handler.deserialize);
   stream.on('error', function(error) {
     handleError(call, error);
   });
@@ -702,13 +700,13 @@ function handleClientStreaming(call, handler, metadata) {
  * @param {Metadata} metadata Metadata from the client
  */
 function handleBidiStreaming(call, handler, metadata) {
-  var stream = new ServerDuplexStream(call, metadata, handler.serialize,
+  let stream = new ServerDuplexStream(call, metadata, handler.serialize,
                                       handler.deserialize);
   stream.waitForCancel();
   handler.func(stream);
 }
 
-var streamHandlers = {
+let streamHandlers = {
   unary: handleUnary,
   server_stream: handleServerStreaming,
   client_stream: handleClientStreaming,
@@ -730,7 +728,7 @@ var streamHandlers = {
  */
 function Server(options) {
   this.handlers = {};
-  var server = new grpc.Server(options);
+  let server = new grpc.Server(options);
   this._server = server;
   this.started = false;
 }
@@ -742,7 +740,7 @@ Server.prototype.start = function() {
   if (this.started) {
     throw new Error('Server is already running');
   }
-  var self = this;
+  let self = this;
   this.started = true;
   this._server.start();
   /**
@@ -756,19 +754,19 @@ Server.prototype.start = function() {
     if (err) {
       return;
     }
-    var details = event.new_call;
-    var call = details.call;
-    var method = details.method;
-    var metadata = Metadata._fromCoreRepresentation(details.metadata);
+    let details = event.new_call;
+    let call = details.call;
+    let method = details.method;
+    let metadata = Metadata._fromCoreRepresentation(details.metadata);
     if (method === null) {
       return;
     }
     self._server.requestCall(handleNewCall);
-    var handler;
+    let handler;
     if (self.handlers.hasOwnProperty(method)) {
       handler = self.handlers[method];
     } else {
-      var batch = {};
+      let batch = {};
       batch[grpc.opType.SEND_INITIAL_METADATA] =
           (new Metadata())._getCoreRepresentation();
       batch[grpc.opType.SEND_STATUS_FROM_SERVER] = {
@@ -841,12 +839,12 @@ Server.prototype.forceShutdown = function() {
   this._server.forceShutdown();
 };
 
-var unimplementedStatusResponse = {
+let unimplementedStatusResponse = {
   code: constants.status.UNIMPLEMENTED,
   details: 'The server does not implement this method'
 };
 
-var defaultHandler = {
+let defaultHandler = {
   unary: function(call, callback) {
     callback(unimplementedStatusResponse);
   },
@@ -877,9 +875,9 @@ Server.prototype.addService = function(service, implementation) {
   if (this.started) {
     throw new Error('Can\'t add a service to a started server.');
   }
-  var self = this;
+  let self = this;
   _.forOwn(service, function(attrs, name) {
-    var method_type;
+    let method_type;
     if (attrs.requestStream) {
       if (attrs.responseStream) {
         method_type = 'bidi';
@@ -893,7 +891,7 @@ Server.prototype.addService = function(service, implementation) {
         method_type = 'unary';
       }
     }
-    var impl;
+    let impl;
     if (implementation[name] === undefined) {
       /* Handle the case where the method is passed with the name exactly as
          written in the proto file, instead of using JavaScript function
@@ -908,9 +906,9 @@ Server.prototype.addService = function(service, implementation) {
     } else {
       impl = _.bind(implementation[name], implementation);
     }
-    var serialize = attrs.responseSerialize;
-    var deserialize = attrs.requestDeserialize;
-    var register_success = self.register(attrs.path, impl, serialize,
+    let serialize = attrs.responseSerialize;
+    let deserialize = attrs.requestDeserialize;
+    let register_success = self.register(attrs.path, impl, serialize,
                                          deserialize, method_type);
     if (!register_success) {
       throw new Error('Method handler for ' + attrs.path +
@@ -928,9 +926,9 @@ Server.prototype.addService = function(service, implementation) {
  */
 Server.prototype.addProtoService = util.deprecate(function(service,
                                                            implementation) {
-  var options;
-  var protobuf_js_5_common = require('./protobuf_js_5_common');
-  var protobuf_js_6_common = require('./protobuf_js_6_common');
+  let options;
+  let protobuf_js_5_common = require('./protobuf_js_5_common');
+  let protobuf_js_6_common = require('./protobuf_js_6_common');
   if (protobuf_js_5_common.isProbablyProtobufJs5(service)) {
     options = _.defaults(service.grpc_options, common.defaultGrpcOptions);
     this.addService(

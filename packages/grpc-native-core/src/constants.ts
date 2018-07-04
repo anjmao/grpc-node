@@ -27,11 +27,11 @@
  * @readonly
  * @enum {number}
  */
-exports.status = {
+export enum status {
   /** Not an error; returned on success */
-  OK: 0,
+  OK = 0,
   /** The operation was cancelled (typically by the caller). */
-  CANCELLED: 1,
+  CANCELLED = 1,
   /**
    * Unknown error.  An example of where this error may be returned is
    * if a status value received from another address space belongs to
@@ -39,14 +39,14 @@ exports.status = {
    * errors raised by APIs that do not return enough error information
    * may be converted to this error.
    */
-  UNKNOWN: 2,
+  UNKNOWN = 2,
   /**
    * Client specified an invalid argument.  Note that this differs
    * from FAILED_PRECONDITION.  INVALID_ARGUMENT indicates arguments
    * that are problematic regardless of the state of the system
    * (e.g., a malformed file name).
    */
-  INVALID_ARGUMENT: 3,
+  INVALID_ARGUMENT = 3,
   /**
    * Deadline expired before operation could complete.  For operations
    * that change the state of the system, this error may be returned
@@ -54,14 +54,14 @@ exports.status = {
    * successful response from a server could have been delayed long
    * enough for the deadline to expire.
    */
-  DEADLINE_EXCEEDED: 4,
+  DEADLINE_EXCEEDED = 4,
   /** Some requested entity (e.g., file or directory) was not found. */
-  NOT_FOUND: 5,
+  NOT_FOUND = 5,
   /**
    * Some entity that we attempted to create (e.g., file or directory)
    * already exists.
    */
-  ALREADY_EXISTS: 6,
+  ALREADY_EXISTS = 6,
   /**
    * The caller does not have permission to execute the specified
    * operation.  PERMISSION_DENIED must not be used for rejections
@@ -70,12 +70,12 @@ exports.status = {
    * used if the caller can not be identified (use UNAUTHENTICATED
    * instead for those errors).
    */
-  PERMISSION_DENIED: 7,
+  PERMISSION_DENIED = 7,
   /**
    * Some resource has been exhausted, perhaps a per-user quota, or
    * perhaps the entire file system is out of space.
    */
-  RESOURCE_EXHAUSTED: 8,
+  RESOURCE_EXHAUSTED = 8,
   /**
    * Operation was rejected because the system is not in a state
    * required for the operation's execution.  For example, directory
@@ -98,7 +98,7 @@ exports.status = {
    *    server does not match the condition. E.g., conflicting
    *    read-modify-write on the same resource.
    */
-  FAILED_PRECONDITION: 9,
+  FAILED_PRECONDITION = 9,
   /**
    * The operation was aborted, typically due to a concurrency issue
    * like sequencer check failures, transaction aborts, etc.
@@ -106,7 +106,7 @@ exports.status = {
    * See litmus test above for deciding between FAILED_PRECONDITION,
    * ABORTED, and UNAVAILABLE.
    */
-  ABORTED: 10,
+  ABORTED = 10,
   /**
    * Operation was attempted past the valid range.  E.g., seeking or
    * reading past end of file.
@@ -124,15 +124,15 @@ exports.status = {
    * a space can easily look for an OUT_OF_RANGE error to detect when
    * they are done.
    */
-  OUT_OF_RANGE: 11,
+  OUT_OF_RANGE = 11,
   /** Operation is not implemented or not supported/enabled in this service. */
-  UNIMPLEMENTED: 12,
+  UNIMPLEMENTED = 12,
   /**
    * Internal errors.  Means some invariants expected by underlying
    * system has been broken.  If you see one of these errors,
    * something is very broken.
    */
-  INTERNAL: 13,
+  INTERNAL = 13,
   /**
    * The service is currently unavailable.  This is a most likely a
    * transient condition and may be corrected by retrying with
@@ -141,14 +141,14 @@ exports.status = {
    * See litmus test above for deciding between FAILED_PRECONDITION,
    * ABORTED, and UNAVAILABLE.
    */
-  UNAVAILABLE: 14,
+  UNAVAILABLE = 14,
   /** Unrecoverable data loss or corruption. */
-  DATA_LOSS: 15,
+  DATA_LOSS = 15,
   /**
    * The request does not have valid authentication credentials for the
    * operation.
    */
-  UNAUTHENTICATED: 16
+  UNAUTHENTICATED = 16
 };
 
 /* The comments about propagation bit flags are copied from
@@ -166,7 +166,7 @@ exports.status = {
  * @alias grpc.propagate
  * @enum {number}
  */
-exports.propagate = {
+export const propagate = {
   DEADLINE: 1,
   CENSUS_STATS_CONTEXT: 2,
   CENSUS_TRACING_CONTEXT: 4,
@@ -184,7 +184,7 @@ exports.propagate = {
  * @readonly
  * @enum {number}
  */
-const callError = {
+export const callError = {
   OK: 0,
   ERROR: 1,
   NOT_ON_SERVER: 2,
@@ -201,8 +201,6 @@ const callError = {
   PAYLOAD_TYPE_MISMATCH: 14
 };
 
-exports.callError = callError;
-
 /**
  * Write flags: these can be bitwise or-ed to form write options that modify
  * how data is written.
@@ -211,7 +209,7 @@ exports.callError = callError;
  * @readonly
  * @enum {number}
  */
-exports.writeFlags = {
+export const writeFlags = {
   /**
    * Hint that the write may be buffered and need not go out on the wire
    * immediately. GRPC is free to buffer the message until the next non-buffered
@@ -230,7 +228,7 @@ exports.writeFlags = {
  * @readonly
  * @enum {number}
  */
-exports.logVerbosity = {
+export const logVerbosity = {
   DEBUG: 0,
   INFO: 1,
   ERROR: 2
@@ -243,7 +241,7 @@ exports.logVerbosity = {
  * @readonly
  * @enum {number}
  */
-exports.methodTypes = {
+export const methodTypes = {
   UNARY: 0,
   CLIENT_STREAMING: 1,
   SERVER_STREAMING: 2,
